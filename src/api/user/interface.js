@@ -6,5 +6,13 @@ export default {
   reqLogin: {
     url: '/login',
     method: 'post'
+  },
+  reqUpdate: {
+    url: '/update',
+    method: 'post'
+  },
+  reqUser: {
+    url: '/user',
+    method: 'get'
   }
 }

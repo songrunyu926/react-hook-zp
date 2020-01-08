@@ -3,7 +3,8 @@ import {
 } from '../api'
 import {
   AUTH_SUCCESS,
-  ERROR_MSG
+  RECEIVE_USER,
+  RESET_USER
 } from './action-type'
 
 //user 的 action
@@ -13,47 +14,22 @@ const authSuccess = user => ({
   type: AUTH_SUCCESS,
   data: user
 })
-//错误同时信息的同步action
-export const errorMsg = msg => ({
-  type: ERROR_MSG,
-  data: msg
-})
+//修改用户信息成功的同步action
+const receiveUser = user => ({type: RECEIVE_USER, data: user})
+//重置用户信息的同步action
+const resetUser = () => ({type: RESET_USER})
 
 //注册 的异步action
 export const registerAsync = (user) => {
   return async dispatch => {
-    const {
-      username,
-      password,
-      password2,
-      type
-    } = user
-    //前台校验
-    if (!username) {
-      return dispatch(errorMsg('用户名不能为空！'))
-    }
-    if (!password) {
-      return  dispatch(errorMsg('密码不能为空！')) 
-    }
-    if (!password2) {
-      return  dispatch(errorMsg('确认密码不能为空！')) 
-    }
-    if (password2 !== password) {
-      return dispatch(errorMsg('两次输入的密码不一致！！'))
-    }
-
     //发送请求
-    let result = await User.reqRegister({
-      username,
-      password,
-      type
-    })
+    let result = await User.reqRegister(user)
     //调用同步的action
     if (result.code === 0) {
       //分发成功的action
       dispatch(authSuccess(result.data))
     } else {
-      dispatch(errorMsg(result.msg))
+      return result.msg
     }
   }
 }
@@ -67,8 +43,39 @@ export const loginAsync = (user) => {
     if (result.code === 0) {
       //分发成功的action
       dispatch(authSuccess(result.data))
+      return result.data
     } else {
-      dispatch(errorMsg(result.msg))
+      return result.msg
     }
+  }
+}
+
+//修改数据的异步action
+export const updateAsync = user => {
+  return async dispatch => {
+    //发送请求
+    const result = await User.reqUpdate(user)
+    if(result.code === 0) {
+      dispatch(receiveUser(result.data))
+    }else {
+      //请求失败 输出错误信息
+      dispatch(resetUser())
+      return result.msg
+    }
+  }
+}
+
+//获取用户信息的异步action
+export const userAsync = () => {
+  return async dispatch => {
+     //发送请求
+     const result = await User.reqUser()
+     if(result.code === 0) {
+       dispatch(receiveUser(result.data))
+     }else {
+       //请求失败 输出错误信息
+       dispatch(resetUser())
+       return result.msg
+     }
   }
 }

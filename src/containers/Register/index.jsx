@@ -1,5 +1,5 @@
 //注册路由组件
-import React, {useState} from "react";
+import React, {useState, useCallback} from "react";
 import {
   NavBar,
   WhiteSpace,
@@ -16,7 +16,7 @@ import { registerAsync } from '../../redux/action-creators'
 
 const { Item } = List;
 
-function Register({history, registerAsync, user}) {
+function Register({history, registerAsync}) {
 
   //定义状态
   const [ username, setUsername ] = useState('')
@@ -24,16 +24,45 @@ function Register({history, registerAsync, user}) {
   const [ password2 , setPassword2 ] = useState('')
   const [ type, setType ] = useState('xiannv')
 
+  const clearForm = useCallback(
+    () => {
+      setPassword('')
+      setPassword2('')
+    },
+    []
+  )
+
+
   //注册
   const register = async () => {
-      await registerAsync({username, password, password2, type})
-      if(user.get('msg') !== ''){
-        Toast.fail(user.get('msg'), 2)
-        setPassword('')
-        setPassword2('')
-      }else {
-        // history.replace('/')
-      }
+    //前台校验
+    if(!username){
+      Toast.fail('请输入用户名', 2)
+      clearForm()
+      return
+    }
+    if(!password){
+      Toast.fail('请输入密码', 2)
+      clearForm()
+      return
+    }
+    if(!password2){
+      Toast.fail('请输入确认密码', 2)
+      return
+    }
+    if(password !== password2){
+      Toast.fail('两次密码不一致', 2)
+      clearForm()
+      return
+    }
+    const result = await registerAsync({username, password, type})
+    if(result) {
+      Toast.fail(result, 2)
+      clearForm()
+    } else {
+      //根据type类型去判断跳转的路由  点击注册按钮的跳转逻辑
+      type === 'laoban' ? history.replace('/laobaninfo') : history.replace('/xiannvinfo')
+    }
   }
 
 
@@ -71,4 +100,4 @@ function Register({history, registerAsync, user}) {
   );
 }
 
-export default connect(state => ({user: state.get('user')}), {registerAsync})(Register);
+export default connect(null, {registerAsync})(Register);
